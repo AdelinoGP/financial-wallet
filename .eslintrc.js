@@ -46,7 +46,6 @@ module.exports = {
     "node/no-callback-literal": "off",
     curly: ["off", "multi"],
     "array-bracket-newline": ["error", { multiline: true }],
-    "brace-style": ["error", "stroustrup", { allowSingleLine: true }],
     "no-multiple-empty-lines": "off",
 
     "require-await": "error",

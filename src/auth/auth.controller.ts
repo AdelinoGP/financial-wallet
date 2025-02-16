@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpStatus, HttpException } from "@nestjs/common";
+import { Controller, Post, Body, HttpStatus, HttpException, ConflictException } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { LoginDto, RegisterDto } from "src/users/user.dto";
 
@@ -17,14 +17,11 @@ export class AuthController {
       return await this.authService.register(dto);
     } catch (error) {
       if (error.code === "P2002")
-        throw new HttpException(
-          {
-            message: ["A user with this email or document ID already exists."],
-            error: "Conflict",
-            statusCode: HttpStatus.CONFLICT,
-          },
-          HttpStatus.CONFLICT
-        );
+        throw new ConflictException({
+          message: ["A user with this email or document ID already exists."],
+          error: "Conflict",
+          statusCode: HttpStatus.CONFLICT,
+        });
       throw error;
     }
   }

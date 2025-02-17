@@ -73,6 +73,8 @@ export class TransactionsService {
       throw new BadRequestException("Only completed transactions can be reversed");
     if (oldTransaction.senderId !== sender.id)
       throw new BadRequestException("Only the sender can reverse the transaction");
+    if (oldTransaction.type == TransactionType.NON_REFUNDABLE || !oldTransaction.senderId)
+      throw new BadRequestException("Non Refundable Transactions cannot be reversed");
 
     let reverseTransaction = await this.prisma.transaction.create({
       data: {
@@ -84,12 +86,9 @@ export class TransactionsService {
       },
     });
 
-    if (reverseTransaction.type == TransactionType.NON_REFUNDABLE || !reverseTransaction.senderId)
-      throw new BadRequestException("Non Refundable Transactions cannot be reversed");
-
     //Revert sender's and receiver's balance, if anything goes bad return funds and set the transaction to FAILED
     try {
-      await this.prisma.$transaction(async (tx) => {
+      reverseTransaction = await this.prisma.$transaction(async (tx) => {
         //Revert the values
         await tx.user.update({
           where: { id: reverseTransaction.senderId! },
@@ -106,7 +105,7 @@ export class TransactionsService {
           data: { status: TransactionStatus.REVERSED },
         });
 
-        reverseTransaction = await tx.transaction.update({
+        return await tx.transaction.update({
           where: { id: reverseTransaction.id },
           data: { status: TransactionStatus.COMPLETED },
         });

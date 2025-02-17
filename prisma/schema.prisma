@@ -14,14 +14,43 @@ enum KycStatus {
 }
 
 model User {
-  id         String    @id @default(uuid())
-  email      String    @unique
-  password   String
-  firstName  String
-  lastName   String
-  documentId String    @unique
-  kycStatus  KycStatus @default(PENDING)
-  balanceCents    Int       @default(0)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  id           String    @id @default(uuid())
+  email        String    @unique
+  password     String
+  firstName    String
+  lastName     String
+  documentId   String    @unique
+  kycStatus    KycStatus @default(PENDING)
+  balanceCents Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  sentTransactions     Transaction[] @relation("SenderTransactions")
+  receivedTransactions Transaction[] @relation("ReceiverTransactions")
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REVERSED
+}
+
+enum TransactionType {
+  TRANSFER
+  REVERSAL
+  NON_REFUNDABLE
+}
+
+model Transaction {
+  id         String            @id @default(uuid())
+  amount     Int
+  senderId   String?
+  receiverId String
+  status     TransactionStatus
+  type       TransactionType
+  sender     User?             @relation("SenderTransactions", fields: [senderId], references: [id])
+  receiver   User              @relation("ReceiverTransactions", fields: [receiverId], references: [id])
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
 }

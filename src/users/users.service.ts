@@ -74,6 +74,7 @@ export class UsersService {
     return user;
   }
 
+  //TODO: Set this endpoint to be used only by admin users
   async getAllUsers(): Promise<PublicUserModel[]> {
     const users = await this.prisma.user.findMany({
       select: { ...PublicUserFields },

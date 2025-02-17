@@ -52,6 +52,12 @@ export class UsersController {
     return await this.usersService.findUserByDocumentId(documentId);
   }
 
+  //TODO: Set this endpoint to be used only by admin users
+  @Get("all")
+  async getAllUsers() {
+    return await this.usersService.getAllUsers();
+  }
+
   @Put()
   @UseGuards(AuthGuard("jwt"))
   async updateUser(@CurrentUser() user: InternalUserModel, @Body() updateUserDto: UpdateUserDto) {

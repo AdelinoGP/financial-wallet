@@ -26,6 +26,14 @@ export class UsersService {
     return user;
   }
 
+  async findPrivateUserById(userId: string): Promise<PrivateUserModel | null> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { ...PrivateUserFields },
+    });
+    return user;
+  }
+
   async findUserById(userId: string): Promise<PublicUserModel | null> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },

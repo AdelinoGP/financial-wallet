@@ -14,7 +14,6 @@ export const PublicUserFields = {
   email: true,
   firstName: true,
   lastName: true,
-  balanceCents: true,
   createdAt: true,
 };
 

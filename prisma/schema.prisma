@@ -16,12 +16,12 @@ enum KycStatus {
 model User {
   id         String    @id @default(uuid())
   email      String    @unique
-  password   String    
+  password   String
   firstName  String
   lastName   String
   documentId String    @unique
   kycStatus  KycStatus @default(PENDING)
-  balance    BigInt    @default(0)
+  balanceCents    Int       @default(0)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 }

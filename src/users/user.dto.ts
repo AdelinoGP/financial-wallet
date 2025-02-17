@@ -1,4 +1,4 @@
-import { IsString, IsEmail, MinLength, IsNotEmpty } from "class-validator";
+import { IsString, IsEmail, MinLength, IsNotEmpty, IsUUID, IsOptional } from "class-validator";
 import { IsCPF } from "class-validator-cpf";
 
 export class RegisterDto {
@@ -35,10 +35,11 @@ export class LoginDto {
 }
 
 export class UpdateUserDto {
+  @IsOptional()
   @IsEmail()
   email?: string;
 
-  @IsString()
+  @IsOptional()
   @MinLength(8, { message: "Password must be at least 8 characters" })
   password?: string;
 }

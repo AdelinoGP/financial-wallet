@@ -107,6 +107,9 @@ describe("TransactionsService", () => {
               findMany: jest.fn(),
               update: jest.fn(),
             },
+            transactionLogs: {
+              create: jest.fn(),
+            },
             $transaction: jest.fn(),
           },
         },
@@ -147,6 +150,7 @@ describe("TransactionsService", () => {
       jest.spyOn(prismaService.user, "findUnique").mockResolvedValue(receiver);
       jest.spyOn(prismaService.transaction, "create").mockResolvedValue(transactionPending);
       jest.spyOn(prismaService.transaction, "update").mockResolvedValue(transactionCompleted);
+      jest.spyOn(prismaService.transactionLogs, "create").mockResolvedValue({} as any);
 
       const mockTx = {
         user: {
@@ -225,6 +229,7 @@ describe("TransactionsService", () => {
     it("should reverse a transaction and update balances", async () => {
       jest.spyOn(prismaService.transaction, "findUnique").mockResolvedValue(transactionCompleted);
       jest.spyOn(prismaService.transaction, "create").mockResolvedValue(reversalPending);
+      jest.spyOn(prismaService.transactionLogs, "create").mockResolvedValue({} as any);
 
       const mockTx = {
         user: {

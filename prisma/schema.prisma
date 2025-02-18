@@ -27,6 +27,7 @@ model User {
 
   sentTransactions     Transaction[] @relation("SenderTransactions")
   receivedTransactions Transaction[] @relation("ReceiverTransactions")
+  AuditLog             AuditLog[]
 }
 
 enum TransactionStatus {
@@ -56,9 +57,19 @@ model Transaction {
 }
 
 model TransactionLogs {
-  id            Int     @id @default(autoincrement())
+  id            Int               @id @default(autoincrement())
   transactionId String
   status        TransactionStatus
   loggedMessage String
-  createdAt     DateTime   @default(now())
+  createdAt     DateTime          @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String
+  details   String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
 }

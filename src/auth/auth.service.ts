@@ -4,6 +4,7 @@ import { JwtService } from "@nestjs/jwt";
 import { LoginDto, RegisterDto } from "src/users/user.dto";
 import * as bcrypt from "bcrypt";
 import { PrivateUserModel, PublicUserModel } from "src/users/user.entity";
+import { KycStatus } from "@prisma/client";
 
 @Injectable()
 export class AuthService {

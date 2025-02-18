@@ -9,6 +9,7 @@ import {
   PublicUserModel,
 } from "./user.entity";
 import { PrismaService } from "src/prisma/prisma.service";
+import { KycStatus } from "@prisma/client";
 
 @Injectable()
 export class UsersService {
@@ -23,6 +24,20 @@ export class UsersService {
       },
       select: { ...PrivateUserFields },
     });
+
+    //Simulate KYC verification
+    new Promise(() => {
+      setTimeout(async () => {
+        await this.prisma.user.update({
+          where: {
+            id: user.id,
+          },
+          data: { kycStatus: KycStatus.VERIFIED },
+        });
+        console.log("KYC verified for user: ", user.id);
+      }, 15 * 1000);
+    });
+
     return user;
   }
 

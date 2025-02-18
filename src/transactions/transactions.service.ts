@@ -1,21 +1,31 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotAcceptableException,
   NotFoundException,
 } from "@nestjs/common";
-import { Transaction, TransactionStatus, TransactionType } from "@prisma/client";
+import { KycStatus, Transaction, TransactionStatus, TransactionType } from "@prisma/client";
 import { CreateTransactionDto } from "src/transactions/transaction.dto";
 import { PrismaService } from "src/prisma/prisma.service";
 import { InternalUserModel } from "src/users/user.entity";
+import { AuditService } from "src/audit/audit.service";
 
 @Injectable()
 export class TransactionsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditService: AuditService
+  ) {}
 
   async createTransaction(sender: InternalUserModel, createTransactionDto: CreateTransactionDto): Promise<Transaction> {
     const { receiverId, amount } = createTransactionDto;
+
+    if (sender.kycStatus !== KycStatus.VERIFIED) {
+      await this.auditService.logAction(sender.id, "KYC_Alert", "User is not Verified.");
+      throw new ForbiddenException("User is not Verified.");
+    }
 
     if (sender.id === receiverId) throw new ConflictException("User cannot send money to themselves");
 
@@ -23,6 +33,31 @@ export class TransactionsService {
 
     const receiver = await this.prisma.user.findUnique({ where: { id: receiverId } });
     if (!receiver || !sender) throw new NotFoundException("User not found");
+
+    if (receiver.kycStatus !== KycStatus.VERIFIED) {
+      await this.auditService.logAction(sender.id, "KYC_Alert", "Receiver is not Verified");
+      throw new ForbiddenException("Receiver is not Verified");
+    }
+
+    //AML Rule, block transactions above 20k
+    if (amount > 20000 * 100) {
+      await this.auditService.logAction(sender.id, "AML_ALERT", `Tried to transfer more than $${amount}`);
+      throw new ForbiddenException("Transaction amount exceeds the limit");
+    }
+
+    //AML Rule, block above 5 transactions in 20 minutes
+    const recentTransactions = await this.prisma.transaction.count({
+      where: { senderId: sender.id, createdAt: { gte: new Date(Date.now() - 20 * 60 * 1000) } },
+    });
+
+    if (recentTransactions > 5) {
+      await this.auditService.logAction(
+        sender.id,
+        "AML_ALERT",
+        "User tried to make too many transactions in a short period"
+      );
+      throw new ForbiddenException("Too many transactions in a short period");
+    }
 
     //Create transaction, set status to PENDING until processed
     const transaction = await this.prisma.transaction.create({
@@ -81,6 +116,7 @@ export class TransactionsService {
     if (oldTransaction.type == TransactionType.NON_REFUNDABLE || !oldTransaction.senderId)
       throw new BadRequestException("Non Refundable Transactions cannot be reversed");
 
+    //Create reversal, set status to PENDING until processed
     let reverseTransaction = await this.prisma.transaction.create({
       data: {
         senderId: oldTransaction.senderId,

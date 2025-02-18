@@ -3,10 +3,12 @@ import { TransactionsService } from "./transactions.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { ConflictException, NotAcceptableException, NotFoundException, BadRequestException } from "@nestjs/common";
 import { KycStatus, TransactionStatus, TransactionType } from "@prisma/client";
+import { AuditService } from "src/audit/audit.service";
 
 describe("TransactionsService", () => {
   let service: TransactionsService;
   let prismaService: PrismaService;
+  let auditService: AuditService;
 
   const sender = {
     id: "1",
@@ -15,7 +17,7 @@ describe("TransactionsService", () => {
     password: "password",
     lastName: "Doe",
     documentId: "10933656092",
-    kycStatus: KycStatus.PENDING,
+    kycStatus: KycStatus.VERIFIED,
     balanceCents: 400,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -90,6 +92,7 @@ describe("TransactionsService", () => {
   };
 
   const transactions = [transactionPending, transactionCompleted, reversalPending, reversalCompleted];
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -106,6 +109,7 @@ describe("TransactionsService", () => {
               findUnique: jest.fn(),
               findMany: jest.fn(),
               update: jest.fn(),
+              count: jest.fn(),
             },
             transactionLogs: {
               create: jest.fn(),
@@ -113,11 +117,18 @@ describe("TransactionsService", () => {
             $transaction: jest.fn(),
           },
         },
+        {
+          provide: AuditService,
+          useValue: {
+            log: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     service = module.get<TransactionsService>(TransactionsService);
     prismaService = module.get<PrismaService>(PrismaService);
+    auditService = module.get<AuditService>(AuditService);
   });
 
   it("should be defined", () => {

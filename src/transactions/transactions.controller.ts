@@ -66,4 +66,10 @@ export class TransactionsController {
   async findAll() {
     return await this.transactionsService.getAllTransactions();
   }
+
+  //TODO: Set this endpoint to be used only by admin users
+  @Get("logs")
+  async getLogs() {
+    return await this.transactionsService.getTransactionLogs();
+  }
 }

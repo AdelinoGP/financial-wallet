@@ -212,4 +212,8 @@ export class TransactionsService {
       },
     });
   }
+
+  async getTransactionLogs() {
+    return await this.prisma.transactionLogs.findMany({});
+  }
 }

@@ -54,3 +54,11 @@ model Transaction {
   createdAt  DateTime          @default(now())
   updatedAt  DateTime          @updatedAt
 }
+
+model TransactionLogs {
+  id            Int     @id @default(autoincrement())
+  transactionId String
+  status        TransactionStatus
+  loggedMessage String
+  createdAt     DateTime   @default(now())
+}

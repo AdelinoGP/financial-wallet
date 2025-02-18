@@ -34,6 +34,7 @@ export class TransactionsService {
         type: TransactionType.TRANSFER,
       },
     });
+    this.logTransaction(transaction, "Create");
 
     //Update sender's and receiver's balance, if anything goes bad return funds and set the transaction to FAILED
     let prismaTransaction: Transaction;
@@ -49,16 +50,20 @@ export class TransactionsService {
           data: { balanceCents: { increment: transaction.amount } },
         });
 
-        return await tx.transaction.update({
+        const completedTransaction = await tx.transaction.update({
           where: { id: transaction.id },
           data: { status: TransactionStatus.COMPLETED },
         });
+        this.logTransaction(completedTransaction, "Create");
+
+        return completedTransaction;
       });
     } catch (error) {
-      await this.prisma.transaction.update({
+      const failedTransaction = await this.prisma.transaction.update({
         where: { id: transaction.id },
         data: { status: TransactionStatus.FAILED },
       });
+      this.logTransaction(failedTransaction, "Create");
       throw error;
     }
 
@@ -85,6 +90,7 @@ export class TransactionsService {
         type: TransactionType.REVERSAL,
       },
     });
+    this.logTransaction(reverseTransaction, "Reverse");
 
     //Revert sender's and receiver's balance, if anything goes bad return funds and set the transaction to FAILED
     try {
@@ -100,27 +106,35 @@ export class TransactionsService {
           data: { balanceCents: { decrement: reverseTransaction.amount } },
         });
 
-        await tx.transaction.update({
+        const reversedTransaction = await tx.transaction.update({
           where: { id: oldTransaction.id },
           data: { status: TransactionStatus.REVERSED },
         });
 
-        return await tx.transaction.update({
+        this.logTransaction(reversedTransaction, "Reverse");
+
+        const completedReversal = await tx.transaction.update({
           where: { id: reverseTransaction.id },
           data: { status: TransactionStatus.COMPLETED },
         });
+
+        this.logTransaction(completedReversal, "Reverse");
+        return completedReversal;
       });
     } catch (error) {
-      await this.prisma.transaction.update({
+      const failedReversal = await this.prisma.transaction.update({
         where: { id: reverseTransaction.id },
         data: { status: TransactionStatus.FAILED },
       });
+
+      this.logTransaction(failedReversal, "Reverse");
       throw error;
     }
 
     return reverseTransaction;
   }
 
+  //TODO: Remove or make this function admin only on production
   async addFunds(user: InternalUserModel, amount: number): Promise<Transaction> {
     const transaction = await this.prisma.transaction.create({
       data: {
@@ -131,6 +145,7 @@ export class TransactionsService {
         type: TransactionType.NON_REFUNDABLE,
       },
     });
+    this.logTransaction(transaction, "AddFunds");
 
     let prismaTransaction: Transaction;
     try {
@@ -140,16 +155,20 @@ export class TransactionsService {
           data: { balanceCents: { increment: amount } },
         });
 
-        return await tx.transaction.update({
+        const completedTransaction = await tx.transaction.update({
           where: { id: transaction.id },
           data: { status: TransactionStatus.COMPLETED },
         });
+
+        this.logTransaction(completedTransaction, "AddFunds");
+        return completedTransaction;
       });
     } catch (error) {
-      prismaTransaction = await this.prisma.transaction.update({
+      const failedTransaction = await this.prisma.transaction.update({
         where: { id: transaction.id },
         data: { status: TransactionStatus.FAILED },
       });
+      this.logTransaction(failedTransaction, "AddFunds");
       throw error;
     }
 
@@ -178,21 +197,19 @@ export class TransactionsService {
     });
   }
 
-  async logTransaction(transactionId: string): Promise<void> {
-    const transaction = await this.prisma.transaction.findUnique({
-      where: { id: transactionId },
+  logTransaction(transaction: Transaction, functionName: string) {
+    const loggedMessage = `[Transaction] New ${transaction.type} Transaction, ID: ${transaction.id},
+      From Sender ID: ${transaction.senderId} to Receiver ID: ${transaction.receiverId},
+      Amount: ${transaction.amount}, Status: ${transaction.status}, Type: ${transaction.type},
+      CalledBy: ${functionName}`;
+    console.log(loggedMessage);
+
+    this.prisma.transactionLogs.create({
+      data: {
+        transactionId: transaction.id,
+        status: transaction.status,
+        loggedMessage: loggedMessage,
+      },
     });
-
-    if (!transaction) {
-      throw new Error("Transaction not found");
-    }
-
-    console.log(`Transaction ID: ${transaction.id}`);
-    console.log(`Sender ID: ${transaction.senderId}`);
-    console.log(`Receiver ID: ${transaction.receiverId}`);
-    console.log(`Amount: ${transaction.amount}`);
-    console.log(`Status: ${transaction.status}`);
-    console.log(`Type: ${transaction.type}`);
-    console.log(`Created At: ${transaction.createdAt}`);
   }
 }

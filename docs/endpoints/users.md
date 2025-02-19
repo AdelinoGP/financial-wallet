@@ -23,7 +23,7 @@ Authorization: Bearer <JWT_TOKEN>
 **Example Response:**
 ```json
 {
-  "id": "user123",
+  "id": "97783d9c-f5d9-4112-a94b-d0c2f9ce6f3e",
   "email": "john.doe@example.com",
   "firstName": "John",
   "lastName": "Doe",
@@ -56,7 +56,7 @@ Content-Type: application/json
 **Example Response:**
 ```json
 {
-  "id": "user123",
+  "id": "97783d9c-f5d9-4112-a94b-d0c2f9ce6f3e",
   "email": "john.doe@example.com",
   "firstName": "John",
   "lastName": "Doe",
@@ -87,7 +87,7 @@ Content-Type: application/json
 **Example Response:**
 ```json
 {
-  "id": "user123",
+  "id": "97783d9c-f5d9-4112-a94b-d0c2f9ce6f3e",
   "email": "john.doe@example.com",
   "firstName": "John",
   "lastName": "Doe",
@@ -119,7 +119,7 @@ Content-Type: application/json
 **Example Response:**
 ```json
 {
-  "id": "user123",
+  "id": "97783d9c-f5d9-4112-a94b-d0c2f9ce6f3e",
   "email": "john.doe@example.com",
   "firstName": "John",
   "lastName": "Doe",
@@ -145,14 +145,14 @@ GET /users/all HTTP/1.1
 ```json
 [
   {
-    "id": "user123",
+    "id": "97783d9c-f5d9-4112-a94b-d0c2f9ce6f3e",
     "email": "john.doe@example.com",
     "firstName": "John",
     "lastName": "Doe",
     "createdAt": "2025-02-18T12:34:56.789Z"
   },
   {
-    "id": "user456",
+    "id": "c37aaac6-aedd-417a-9a0a-f14fff4e7587",
     "email": "jane.smith@example.com",
     "firstName": "Jane",
     "lastName": "Smith",
@@ -188,7 +188,7 @@ Content-Type: application/json
 **Example Response:**
 ```json
 {
-  "id": "user123",
+  "id": "97783d9c-f5d9-4112-a94b-d0c2f9ce6f3e",
   "email": "john.doe.updated@example.com",
   "firstName": "John",
   "lastName": "Doe",

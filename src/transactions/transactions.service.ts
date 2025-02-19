@@ -233,14 +233,14 @@ export class TransactionsService {
     });
   }
 
-  logTransaction(transaction: Transaction, functionName: string) {
+  async logTransaction(transaction: Transaction, functionName: string) {
     const loggedMessage = `[Transaction] New ${transaction.type} Transaction, ID: ${transaction.id},
       From Sender ID: ${transaction.senderId} to Receiver ID: ${transaction.receiverId},
       Amount: ${transaction.amount}, Status: ${transaction.status}, Type: ${transaction.type},
       CalledBy: ${functionName}`;
     console.log(loggedMessage);
 
-    this.prisma.transactionLogs.create({
+    await this.prisma.transactionLogs.create({
       data: {
         transactionId: transaction.id,
         status: transaction.status,
